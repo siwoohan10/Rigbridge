@@ -45,6 +45,5 @@
     "FM",
     "RTTY",
     "PKTUSB"
-  ],
-  "pad_enabled": false
+  ]
 }

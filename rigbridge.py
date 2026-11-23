@@ -271,10 +271,6 @@ class Commander:
         if not in_world:
             log.warning("ignored %s: not in the configured world", cmd)
             return
-        if op == "pad":                                       # room tablet (no radio involved)
-            if getattr(self, "pad", None) is not None:
-                self.pad.command(cmd)
-            return
         if op == "cap":                                       # video captions (no radio involved)
             if getattr(self, "captions", None) is not None:
                 self.captions.command(cmd)
@@ -1162,7 +1158,6 @@ class Streamer(threading.Thread):
 # --------------------------------------------------------------------------- HTTP + tunnel
 class StreamHandler(http.server.SimpleHTTPRequestHandler):
     state: RigState = None
-    pad = None          # rigbridge_pad.Pad
     captions = None     # rigbridge_captions.Captions
 
     def _json(self, code: int, obj):
@@ -1175,30 +1170,12 @@ class StreamHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_POST(self):
-        """Browser extension → recommendation cards. Only extension origins (web pages cannot fake Origin)."""
-        if not self.path.startswith("/pad/feed") or self.pad is None:
-            self.send_error(404)
-            return
-        origin = self.headers.get("Origin", "")
-        from rigbridge_pad import EXT_ORIGINS
-        if not origin.startswith(EXT_ORIGINS):
-            self._json(403, {"ok": False, "error": "extension only"})
-            return
-        if (self.headers.get("Host") or "").split(":")[0] not in ("127.0.0.1", "localhost"):
-            self._json(403, {"ok": False, "error": "local only"})     # never via the public tunnel
-            return
-        try:
-            n = int(self.headers.get("Content-Length", "0"))
-            data = json.loads(self.rfile.read(min(n, 2_000_000)).decode("utf-8"))
-            added = self.pad.add_feed(str(data.get("service", "")), list(data.get("items", [])))
-            self._json(200, {"ok": True, "added": added, "counts": self.pad.feed.counts()})
-        except Exception as e:  # noqa: BLE001
-            self._json(400, {"ok": False, "error": str(e)[:200]})
+        self.send_error(404)
 
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(STREAM_DIR), **kw)
@@ -1221,9 +1198,6 @@ class StreamHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(404)                            # operator's own VRChat only, not via the tunnel
                 return
             self._json(200, self.captions.status())
-            return
-        if self.path.startswith("/pad/status.json") and self.pad is not None:
-            self._json(200, self.pad.status())
             return
         if self.path.startswith("/status.json"):
             st = self.state
@@ -1404,12 +1378,10 @@ def main():
     audio = {"tci": TciAudio, "device": DeviceAudio}.get(cfg.get("audio_source", "loopback"), LoopbackAudio)(cfg, state, buf)
     audio.start()
     streamer = Streamer(cfg, state, buf)
-    pad_rtsp = ""
     if cfg.get("rtsp_enabled", True) and MediaMtx.available():
         mtx = MediaMtx(cfg, streamer)
         if mtx.start_and_wait():
             streamer.rtsp_url = f"rtsp://127.0.0.1:{mtx.port}/radio"
-            pad_rtsp = f"rtsp://127.0.0.1:{mtx.port}/pad"
             public_port = int(cfg.get("rtsp_port", 8554))
             try:
                 RtspKeepaliveProxy(public_port, mtx.port).start()
@@ -1419,16 +1391,6 @@ def main():
         else:
             log.warning("MediaMTX did not open port %s - HLS only", mtx.port)
     streamer.start()
-    pad = None
-    if cfg.get("pad_enabled", True):
-        sys.path.insert(0, str(BASE))
-        from rigbridge_pad import Pad
-        pad = Pad(cfg, find_exe, _bind_child, STREAM_DIR / "pad", pad_rtsp)
-        pad.start()
-        commander.pad = pad
-        StreamHandler.pad = pad
-        log.info("pad (tablet): rtsp://localhost:%s/pad , http://localhost:%s/pad/pad.m3u8",
-                 cfg.get("rtsp_port", 8554), cfg["http_port"])
     if cfg.get("captions_enabled", True):
         sys.path.insert(0, str(BASE))
         from rigbridge_captions import Captions
@@ -1540,9 +1502,6 @@ def main():
         pystray.MenuItem("수신 음성 장치 고르기", pystray.Menu(device_items)),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem(public_text, lambda: copy_to_clipboard(state.public_url)),
-        pystray.MenuItem("태블릿 추천 친구용 주소 복사",
-                         lambda: copy_to_clipboard(state.public_url.replace("/radio.m3u8", "/pad/pad.m3u8")),
-                         visible=lambda _i: pad is not None),
         pystray.MenuItem("내 PC용 주소 복사", lambda: copy_to_clipboard(local_url)),
         pystray.MenuItem("로그 폴더 열기", lambda: os.startfile(str(BASE))),
         pystray.Menu.SEPARATOR,

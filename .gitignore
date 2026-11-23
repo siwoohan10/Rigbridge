@@ -9,10 +9,7 @@ rigbridge.log
 # Live HLS stream audio/video chunks
 stream/*.ts
 stream/*.m3u8
-stream/pad/*.ts
-stream/pad/*.m3u8
 !stream/.gitkeep
-!stream/pad/.gitkeep
 
 # Third-party binaries
 mediamtx/mediamtx.exe
