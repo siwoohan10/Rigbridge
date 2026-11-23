@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 13px "Malgun Gothic", sans-serif; margin: 0; padding: 14px; width: 270px; background: #171a26; color: #e8eaf3; }
+  h1 { font-size: 15px; margin: 0 0 10px; }
+  .st { padding: 8px 10px; border-radius: 8px; background: #23273a; margin-bottom: 10px; }
+  .ok { color: #7ee2a8; } .bad { color: #ff9b8a; }
+  label { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; }
+  .n { color: #9aa3c0; margin-left: 6px; }
+  small { color: #8b93ad; display: block; margin-top: 10px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <h1>RigBridge 태블릿 연결</h1>
+  <div class="st" id="st">확인 중…</div>
+  <label><span>YouTube 홈 추천<span class="n" id="n-youtube"></span></span><input type="checkbox" id="e-youtube"></label>
+  <label><span>X 홈 타임라인<span class="n" id="n-x"></span></span><input type="checkbox" id="e-x"></label>
+  <label><span>BOOTH 상품·좋아요<span class="n" id="n-booth"></span></span><input type="checkbox" id="e-booth"></label>
+  <small>해당 사이트 탭을 열어 두면 화면에 보이는 카드(제목·썸네일·링크)만 이 PC의 RigBridge로 보냅니다.
+  로그인 정보·쿠키는 보내지 않으며, 태블릿에 표시된 목록은 월드의 다른 사람에게도 보입니다.</small>
+  <script src="popup.js"></script>
+</body>
+</html>

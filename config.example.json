@@ -1,0 +1,50 @@
+{
+  "operator_name": "YOUR_VRCHAT_NAME",
+  "world_id": "wrld_YOUR_WORLD_ID",
+  "ptt_allowed": [],
+  "ptt_timeout_sec": 180,
+  "rig_link_host": "",
+  "rigctld_host": "127.0.0.1",
+  "rigctld_port": 4533,
+  "poll_interval_sec": 0.25,
+  "audio_source": "loopback",
+  "tci_url": "ws://127.0.0.1:50001",
+  "audio_device": "Realtek",
+  "http_port": 8810,
+  "stream_fps": 10,
+  "stream_width": 640,
+  "stream_height": 360,
+  "hls_segment_sec": 0.6,
+  "hls_list_size": 4,
+  "tunnel_enabled": true,
+  "vrchat_log_dir": "",
+  "tune_steps_hz": [
+    10,
+    100,
+    1000,
+    5000,
+    10000
+  ],
+  "bands_hz": [
+    1810000,
+    3500000,
+    7000000,
+    10100000,
+    14000000,
+    18068000,
+    21000000,
+    24890000,
+    28000000,
+    50000000
+  ],
+  "modes": [
+    "LSB",
+    "USB",
+    "CW",
+    "AM",
+    "FM",
+    "RTTY",
+    "PKTUSB"
+  ],
+  "pad_enabled": false
+}
